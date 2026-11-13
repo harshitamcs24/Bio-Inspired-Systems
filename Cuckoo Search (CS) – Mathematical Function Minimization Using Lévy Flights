@@ -1,0 +1,78 @@
+
+import random
+import math
+
+# Cuckoo Search parameters
+nests = 20
+iterations = 100
+pa = 0.25
+
+# Objective function (minimize)
+def fitness(x):
+    return x**2 + 10*(1 - math.cos(2*math.pi*x))
+
+# Generate initial nests
+population = [
+    random.uniform(-10, 10)
+    for _ in range(nests)
+]
+
+# Levy flight using Mantegna's algorithm
+def levy_flight():
+
+    beta = 1.5
+
+    sigma = (
+        math.gamma(1 + beta)
+        * math.sin(math.pi * beta / 2)
+        / (
+            math.gamma((1 + beta) / 2)
+            * beta
+            * 2**((beta - 1) / 2)
+        )
+    )**(1 / beta)
+
+    u = random.gauss(0, sigma)
+    v = random.gauss(0, 1)
+
+    return u / (abs(v)**(1/beta))
+
+# Cuckoo Search optimization
+for t in range(iterations):
+
+    for i in range(nests):
+
+        # Generate new solution using Levy flight
+        step = levy_flight()
+        new_solution = population[i] + 0.1 * step
+
+        new_solution = max(-10, min(10, new_solution))
+
+        # Select random nest
+        j = random.randrange(nests)
+
+        if fitness(new_solution) < fitness(population[j]):
+            population[j] = new_solution
+
+    # Abandon worst nests
+    population.sort(key=fitness)
+
+    abandon_count = int(pa * nests)
+
+    for i in range(nests - abandon_count, nests):
+        population[i] = random.uniform(-10, 10)
+
+    # Keep population within limits
+    population = [
+        max(-10, min(10, x))
+        for x in population
+    ]
+
+# Best solution
+best = min(population, key=fitness)
+
+print("CUCKOO SEARCH ALGORITHM")
+print("-----------------------")
+print("Best Solution x:", round(best, 6))
+print("Minimum Function Value:", round(fitness(best), 6))
+print("Number of Iterations:", iterations)
