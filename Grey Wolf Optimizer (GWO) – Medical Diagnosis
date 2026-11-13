@@ -1,0 +1,93 @@
+
+import random
+import math
+
+# Medical dataset (illustrative)
+data = [
+    [45, 140, 30, 1],
+    [50, 160, 35, 1],
+    [25, 100, 22, 0],
+    [35, 110, 25, 0],
+    [60, 180, 38, 1],
+    [28, 105, 24, 0]
+]
+
+# Features: Age, Glucose, BMI
+# Last column: Disease label
+
+wolves = 10
+iterations = 30
+features = 3
+
+population = [
+    [random.randint(0, 1) for _ in range(features)]
+    for _ in range(wolves)
+]
+
+def fitness(wolf):
+    selected = [j for j in range(features) if wolf[j] == 1]
+
+    if not selected:
+        return 1.0
+
+    correct = 0
+
+    for row in data:
+        score = sum(row[j] / 200 for j in selected)
+        prediction = 1 if score > 0.7 else 0
+
+        if prediction == row[3]:
+            correct += 1
+
+    accuracy = correct / len(data)
+
+    return 1 - accuracy + 0.01 * len(selected) / features
+
+# GWO optimization
+for t in range(iterations):
+
+    population.sort(key=fitness)
+
+    alpha = population[0][:]
+    beta = population[1][:]
+    delta = population[2][:]
+
+    a = 2 - 2 * t / iterations
+
+    for i in range(wolves):
+
+        for j in range(features):
+
+            values = []
+
+            for leader in [alpha, beta, delta]:
+                r1 = random.random()
+                r2 = random.random()
+
+                A = 2 * a * r1 - a
+                C = 2 * r2
+
+                D = abs(C * leader[j] - population[i][j])
+                values.append(leader[j] - A * D)
+
+            new_position = sum(values) / 3
+
+            probability = 1 / (1 + math.exp(-max(-50, min(50, new_position))))
+
+            population[i][j] = 1 if random.random() < probability else 0
+
+best = min(population, key=fitness)
+
+print("GREY WOLF OPTIMIZER")
+print("-------------------")
+print("Best Selected Features:", best)
+print("Fitness Value:", round(fitness(best), 4))
+print("Selected Feature Names:")
+
+names = ["Age", "Glucose", "BMI"]
+
+for i in range(features):
+    if best[i] == 1:
+        print(names[i])
+
+print("Optimization Completed!")
