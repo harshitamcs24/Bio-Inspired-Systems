@@ -1,0 +1,77 @@
+
+import random
+
+# PSO parameters
+particles = 30
+iterations = 100
+
+w = 0.7
+c1 = 1.5
+c2 = 1.5
+
+# Engineering design objective
+def fitness(x, y):
+
+    cost = 5*x + 4*y
+
+    # Penalty for violating area constraint
+    penalty = 100 * max(0, 20 - x*y)**2
+
+    return cost + penalty
+
+# Initialize particles
+position = [
+    [random.uniform(1, 10), random.uniform(1, 10)]
+    for _ in range(particles)
+]
+
+velocity = [
+    [random.uniform(-1, 1), random.uniform(-1, 1)]
+    for _ in range(particles)
+]
+
+pbest = [p[:] for p in position]
+
+gbest = min(pbest, key=lambda p: fitness(p[0], p[1]))[:]
+
+# PSO optimization
+for t in range(iterations):
+
+    for i in range(particles):
+
+        current = fitness(
+            position[i][0],
+            position[i][1]
+        )
+
+        if current < fitness(pbest[i][0], pbest[i][1]):
+            pbest[i] = position[i][:]
+
+        if fitness(pbest[i][0], pbest[i][1]) < fitness(gbest[0], gbest[1]):
+            gbest = pbest[i][:]
+
+        for j in range(2):
+
+            r1 = random.random()
+            r2 = random.random()
+
+            velocity[i][j] = (
+                w * velocity[i][j]
+                + c1 * r1 * (pbest[i][j] - position[i][j])
+                + c2 * r2 * (gbest[j] - position[i][j])
+            )
+
+            position[i][j] += velocity[i][j]
+
+            # Design boundaries
+            position[i][j] = max(
+                1, min(10, position[i][j])
+            )
+
+# Final result
+print("PARTICLE SWARM OPTIMIZATION")
+print("---------------------------")
+print("Optimal x:", round(gbest[0], 4))
+print("Optimal y:", round(gbest[1], 4))
+print("Minimum Cost:", round(fitness(gbest[0], gbest[1]), 4))
+print("Design Area:", round(gbest[0] * gbest[1], 4))
