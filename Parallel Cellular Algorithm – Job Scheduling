@@ -1,0 +1,71 @@
+
+import random
+
+# Job scheduling parameters
+jobs = 10
+machines = 3
+cells = 20
+iterations = 50
+
+# Processing time of each job
+processing_time = [12, 8, 15, 6, 10, 7, 14, 9, 5, 11]
+
+# Initialize cellular population
+population = [
+    [random.randint(0, machines - 1) for _ in range(jobs)]
+    for _ in range(cells)
+]
+
+# Calculate makespan
+def fitness(schedule):
+    machine_time = [0] * machines
+
+    for i in range(jobs):
+        machine = schedule[i]
+        machine_time[machine] += processing_time[i]
+
+    return max(machine_time)
+
+# Cellular optimization
+for t in range(iterations):
+
+    new_population = []
+
+    for i in range(cells):
+
+        left = (i - 1) % cells
+        right = (i + 1) % cells
+
+        neighbors = [
+            population[left],
+            population[i],
+            population[right]
+        ]
+
+        best_neighbor = min(neighbors, key=fitness)
+        candidate = best_neighbor[:]
+
+        # Mutation
+        position = random.randint(0, jobs - 1)
+        candidate[position] = random.randint(0, machines - 1)
+
+        if fitness(candidate) < fitness(population[i]):
+            new_population.append(candidate)
+        else:
+            new_population.append(population[i][:])
+
+    population = new_population
+
+# Find best solution
+best = min(population, key=fitness)
+
+print("PARALLEL CELLULAR ALGORITHM")
+print("---------------------------")
+print("Processing Times:", processing_time)
+print("Best Job Allocation:")
+
+for i in range(jobs):
+    print("Job", i + 1, "-> Machine", best[i] + 1)
+
+print("Minimum Makespan:", fitness(best))
+print("Optimization Completed!")
